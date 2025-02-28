@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>MindGenix Stress History</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #6c5ce7;
+            --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: var(--gradient-bg);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.5rem;
+            color: #fff !important;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #fff !important;
+        }
+
+        .profile-image-nav {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa; /* Light background for the icon */
+            color: var(--primary-color); /* Icon color */
+            font-size: 24px; /* Icon size */
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+
+        .history-container {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .history-container h1 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .filter-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-container label {
+            font-weight: 500;
+        }
+
+        .filter-container input[type="datetime-local"] {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .filter-container button {
+            padding: 8px 20px;
+            border-radius: 5px;
+            background: var(--gradient-bg);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        .filter-container button:hover {
+            opacity: 0.9;
+        }
+
+        .table {
+            margin-bottom: 20px;
+        }
+
+        .table th {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .btn-primary {
+            background: var(--gradient-bg);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+
+        .footer {
+            background: var(--gradient-bg);
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+            margin-top: auto;
+        }
+
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            opacity: 0.8;
+        }
+
+        /* Optional: Add custom styles for printing */
+        @media print {
+            .no-print {
+                display: none; /* Hide elements that should not be printed */
+            }
+            .print-only {
+                display: block; /* Show elements only during printing */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/auth/eventCode">
+                <i class="fas fa-brain me-2"></i>MindGenix
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/profile">
+                            <!-- Display user's profile picture or a default user icon -->
+                            <th:block th:if="${user?.profilePicture != null and !user.profilePicture.isEmpty()}">
+                                <img th:src="@{'/uploads/' + ${user.profilePicture}}" class="profile-image-nav" alt="Profile Picture">
+                            </th:block>
+                            <th:block th:unless="${user?.profilePicture != null and !user.profilePicture.isEmpty()}">
+                                <i class="fas fa-user-circle profile-image-nav"></i> <!-- Default user icon -->
+                            </th:block>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/eventCode">
+                            <i class="fa-solid fa-question-circle"></i> Question Access
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <form action="/auth/logout" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-link nav-link">
+                                <i class="fas fa-sign-out-alt me-2"></i>Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="history-container">
+            <h1>Your MindGenix Stress History</h1>
+            <div class="filter-container">
+                <label for="startDate">Start Date:</label>
+                <input type="datetime-local" id="startDate" name="startDate">
+                <label for="endDate">End Date:</label>
+                <input type="datetime-local" id="endDate" name="endDate">
+                <button onclick="filterByDateRange()" class="btn btn-primary">Filter</button>
+            </div>
+            <!-- Print All Button -->
+            <button onclick="printAll()" class="btn btn-primary no-print">Print All</button>
+            <table class="table table-bordered table-striped">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Physical Stress (%)</th>
+                        <th>Physical Stress Level</th>
+                        <th>Mental Stress (%)</th>
+                        <th>Mental Stress Level</th>
+                        <th>Job Stress (%)</th>
+                        <th>Job Stress Level</th>
+                        <th class="no-print">Action</th> <!-- Action column for print button -->
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="result : ${stressHistory}">
+                        <td th:text="${#temporals.format(result.createdAt, 'dd-MM-yyyy HH:mm')}"></td>
+                        <td th:text="${result.physicalStressPercentage}"></td>
+                        <td th:text="${result.physicalStressLevel}"></td>
+                        <td th:text="${result.mentalStressPercentage}"></td>
+                        <td th:text="${result.mentalStressLevel}"></td>
+                        <td th:text="${result.jobStressPercentage}"></td>
+                        <td th:text="${result.jobStressLevel}"></td>
+                        <td class="no-print">
+                            <!-- Print Button for Individual Row -->
+                            <button onclick="printRow(this)" class="btn btn-sm btn-info">Print</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 MindGenix. All rights reserved.</p>
+            <p class="mb-0">
+                <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Function to print a specific row with a modern design
+        function printRow(button) {
+            const row = button.closest('tr'); // Get the closest row
+
+            // Modern design for the print content
+            const printContents = `
+                <html>
+                    <head>
+                        <title>MindGenix Stress Result</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                background-color: #f9f9f9;
+                                color: #333;
+                                padding: 20px;
+                            }
+                            .print-container {
+                                max-width: 600px;
+                                margin: 0 auto;
+                                background-color: #fff;
+                                padding: 20px;
+                                border-radius: 10px;
+                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            }
+                            h2 {
+                                color: #007bff;
+                                text-align: center;
+                                margin-bottom: 20px;
+                            }
+                            .result-item {
+                                margin-bottom: 15px;
+                                padding: 10px;
+                                border-bottom: 1px solid #eee;
+                            }
+                            .result-item:last-child {
+                                border-bottom: none;
+                            }
+                            .result-item strong {
+                                display: inline-block;
+                                width: 150px;
+                                color: #555;
+                            }
+                            .result-item span {
+                                color: #333;
+                            }
+                            .footer {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-top: 20px;
+                                font-size: 12px;
+                                color: #777;
+                            }
+                            .footer .left {
+                                text-align: left;
+                            }
+                            .footer .right {
+                                text-align: right;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-container">
+                            <h2>MindGenix Stress Result</h2>
+                            <div class="result-item">
+                                <strong>Date:</strong>
+                                <span>${row.cells[0].innerText}</span>
+                            </div>
+                            <div class="result-item">
+                                <strong>Physical Stress:</strong>
+                                <span>${row.cells[1].innerText}% (${row.cells[2].innerText})</span>
+                            </div>
+                            <div class="result-item">
+                                <strong>Mental Stress:</strong>
+                                <span>${row.cells[3].innerText}% (${row.cells[4].innerText})</span>
+                            </div>
+                            <div class="result-item">
+                                <strong>Job Stress:</strong>
+                                <span>${row.cells[5].innerText}% (${row.cells[6].innerText})</span>
+                            </div>
+                            <div class="footer">
+                                <div class="left">Provided by - Aminul</div>
+                                <div class="right">Generated by Stress Management System</div>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+            `;
+
+            // Open a new window for printing
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write(printContents);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Function to filter by date range
+        function filterByDateRange() {
+            var startDate = document.getElementById("startDate").value;
+            var endDate = document.getElementById("endDate").value;
+
+            if (!startDate || !endDate) {
+                alert("Please select both start and end dates.");
+                return;
+            }
+
+            // Convert to ISO string and extract only the date (yyyy-MM-dd)
+            var startDateTime = new Date(startDate).toISOString().split('T')[0]; // Only date part
+            var endDateTime = new Date(endDate).toISOString().split('T')[0]; // Only date part
+
+            // Redirect with query parameters for date range filtering
+            window.location.href = `/auth/history?startDate=${startDateTime}&endDate=${endDateTime}`;
+        }
+
+        // Function to print the entire table with a modern design
+        function printAll() {
+            const rows = document.querySelectorAll('table tbody tr'); // Get all rows in the table
+            let allResults = '';
+
+            // Loop through each row and generate the print content
+            rows.forEach(row => {
+                allResults += `
+                    <div class="result-item">
+                        <strong>Date:</strong>
+                        <span>${row.cells[0].innerText}</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Physical Stress:</strong>
+                        <span>${row.cells[1].innerText}% (${row.cells[2].innerText})</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Mental Stress:</strong>
+                        <span>${row.cells[3].innerText}% (${row.cells[4].innerText})</span>
+                    </div>
+                    <div class="result-item">
+                        <strong>Job Stress:</strong>
+                        <span>${row.cells[5].innerText}% (${row.cells[6].innerText})</span>
+                    </div>
+                    <hr> <!-- Add a horizontal line between results -->
+                `;
+            });
+
+            // Modern design for the print content
+            const printContents = `
+                <html>
+                    <head>
+                        <title>MindGenix Stress Results</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                background-color: #f9f9f9;
+                                color: #333;
+                                padding: 20px;
+                            }
+                            .print-container {
+                                max-width: 600px;
+                                margin: 0 auto;
+                                background-color: #fff;
+                                padding: 20px;
+                                border-radius: 10px;
+                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            }
+                            h2 {
+                                color: #007bff;
+                                text-align: center;
+                                margin-bottom: 20px;
+                            }
+                            .result-item {
+                                margin-bottom: 15px;
+                                padding: 10px;
+                                border-bottom: 1px solid #eee;
+                            }
+                            .result-item:last-child {
+                                border-bottom: none;
+                            }
+                            .result-item strong {
+                                display: inline-block;
+                                width: 150px;
+                                color: #555;
+                            }
+                            .result-item span {
+                                color: #333;
+                            }
+                            .footer {
+                                display: flex;
+                                justify-content: space-between;
+                                margin-top: 20px;
+                                font-size: 12px;
+                                color: #777;
+                            }
+                            .footer .left {
+                                text-align: left;
+                            }
+                            .footer .right {
+                                text-align: right;
+                            }
+                            hr {
+                                border: 0;
+                                height: 1px;
+                                background: #eee;
+                                margin: 20px 0;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-container">
+                            <h2>MindGenix Stress Results</h2>
+                            ${allResults}
+                            <div class="footer">
+                                <div class="left">Provided by - Aminul</div>
+                                <div class="right">Generated by Stress Management System</div>
+                            </div>
+                        </div>
+                    </body>
+                </html>
+            `;
+
+            // Open a new window for printing
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write(printContents);
+            printWindow.document.close();
+            printWindow.print();
+        }
+    </script>
+</body>
+</html>

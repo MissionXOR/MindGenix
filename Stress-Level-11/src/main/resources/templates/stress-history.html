@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User Stress Result | MindGenix</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #6c5ce7; /* Purple */
+            --secondary-color: #4a90e2; /* Blue */
+            --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --dark-bg: #1e1e2f; /* Dark background */
+            --dark-text: #ffffff; /* White text */
+            --dark-card-bg: #2a2a40; /* Dark card background */
+            --dark-border: #3a3a5c; /* Dark border */
+            --sidebar-width: 250px; /* Sidebar width */
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--dark-text);
+            margin: 0;
+        }
+
+        .wrapper {
+            display: flex;
+            flex: 1;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--dark-card-bg);
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            background: var(--primary-color);
+            color: var(--dark-text);
+        }
+
+        .sidebar .nav-link.active {
+            background: var(--primary-color);
+            color: var(--dark-text);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center; /* Center vertically */
+        }
+
+        .admin-dashboard-container {
+            background: var(--dark-card-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 1200px;
+            text-align: center;
+            border: 1px solid var(--dark-border);
+        }
+
+        .table {
+            margin-bottom: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th, .table td {
+            padding: 15px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table th {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: var(--gradient-bg);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            background: var(--dark-card-bg);
+            color: var(--dark-text);
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid var(--dark-border);
+            width: 100%;
+        }
+
+        .footer a {
+            color: var(--dark-text);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            opacity: 0.8;
+        }
+
+        /* Circular Percentage Styles */
+        .circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 auto;
+        }
+
+        .circle.high {
+            background-color: #ff4d4d; /* Red for high stress */
+            color: #fff;
+        }
+
+        .circle.medium {
+            background-color: #ffcc00; /* Yellow for medium stress */
+            color: #000;
+        }
+
+        .circle.low {
+            background-color: #4caf50; /* Green for low stress */
+            color: #fff;
+        }
+
+        /* Stress Level Text Highlighting */
+        .stress-level.high {
+            color: #ff4d4d; /* Red for high stress */
+        }
+
+        .stress-level.medium {
+            color: #ffcc00; /* Yellow for medium stress */
+        }
+
+        .stress-level.low {
+            color: #4caf50; /* Green for low stress */
+        }
+
+        /* Print Button Container */
+        .print-btn-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+
+        /* Optional: Add custom styles for printing */
+        @media print {
+            .no-print {
+                display: none; /* Hide elements that should not be printed */
+            }
+            .print-only {
+                display: block; /* Show elements only during printing */
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Wrapper for sidebar and main content -->
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h3 class="text-center mb-4">Admin Panel</h3>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#">
+                        <i class="fas fa-calendar-plus me-2"></i>Create Event
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/admin/users">
+                        <i class="fas fa-users me-2"></i>Manage Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/admin/events"> <!-- Updated href -->
+                        <i class="fas fa-users me-2"></i>All Events
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <form action="/auth/logout" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-link nav-link w-100 text-start">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="admin-dashboard-container">
+                <!-- Print Button and Heading with Username -->
+                <h2 th:text="${username} + ' Stress Results'"></h2>
+                <div class="print-btn-container">
+                    <button onclick="printTable()" class="btn btn-primary no-print">
+                        <i class="fal fa-print"></i> Print
+                    </button>
+                </div>
+
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Physical Stress (%)</th>
+                            <th>Physical Stress Level</th>
+                            <th>Mental Stress (%)</th>
+                            <th>Mental Stress Level</th>
+                            <th>Job Stress (%)</th>
+                            <th>Job Stress Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="result : ${userStressResults}">
+                            <td th:text="${#temporals.format(result.createdAt, 'dd-MM-yyyy HH:mm')}"></td>
+                            <td th:text="${username}"></td>
+                            <!-- Physical Stress -->
+                            <td>
+                                <div th:classappend="${result.physicalStressLevel == 'High' ? 'circle high' : 
+                                                      (result.physicalStressLevel == 'Medium' ? 'circle medium' : 'circle low')}"
+                                     th:text="${result.physicalStressPercentage} + '%'">
+                                </div>
+                            </td>
+                            <td>
+                                <span th:classappend="${result.physicalStressLevel == 'High' ? 'stress-level high' : 
+                                                       (result.physicalStressLevel == 'Medium' ? 'stress-level medium' : 'stress-level low')}"
+                                      th:text="${result.physicalStressLevel}">
+                                </span>
+                            </td>
+                            <!-- Mental Stress -->
+                            <td>
+                                <div th:classappend="${result.mentalStressLevel == 'High' ? 'circle high' : 
+                                                      (result.mentalStressLevel == 'Medium' ? 'circle medium' : 'circle low')}"
+                                     th:text="${result.mentalStressPercentage} + '%'">
+                                </div>
+                            </td>
+                            <td>
+                                <span th:classappend="${result.mentalStressLevel == 'High' ? 'stress-level high' : 
+                                                       (result.mentalStressLevel == 'Medium' ? 'stress-level medium' : 'stress-level low')}"
+                                      th:text="${result.mentalStressLevel}">
+                                </span>
+                            </td>
+                            <!-- Job Stress -->
+                            <td>
+                                <div th:classappend="${result.jobStressLevel == 'High' ? 'circle high' : 
+                                                      (result.jobStressLevel == 'Medium' ? 'circle medium' : 'circle low')}"
+                                     th:text="${result.jobStressPercentage} + '%'">
+                                </div>
+                            </td>
+                            <td>
+                                <span th:classappend="${result.jobStressLevel == 'High' ? 'stress-level high' : 
+                                                       (result.jobStressLevel == 'Medium' ? 'stress-level medium' : 'stress-level low')}"
+                                      th:text="${result.jobStressLevel}">
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 MindGenix. All rights reserved.</p>
+            <p class="mb-0">
+                <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Print Functionality -->
+    <script>
+        function printTable() {
+            const printContents = `
+                <html>
+                    <head>
+                        <title>User Stress Result</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                background-color: #f9f9f9;
+                                color: #333;
+                                padding: 20px;
+                            }
+                            .print-container {
+                                max-width: 800px;
+                                margin: 0 auto;
+                                background-color: #fff;
+                                padding: 20px;
+                                border-radius: 10px;
+                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            }
+                            h2 {
+                                color: #007bff;
+                                text-align: center;
+                                margin-bottom: 20px;
+                            }
+                            table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-bottom: 20px;
+                            }
+                            table, th, td {
+                                border: 1px solid #ddd;
+                            }
+                            th, td {
+                                padding: 12px 20px;
+                                text-align: center;
+                                vertical-align: middle;
+                            }
+                            th {
+                                background-color: #007bff;
+                                color: #fff;
+                            }
+                            tbody tr {
+                                text-align: center;
+                            }
+                            .circle {
+                                width: 80px;
+                                height: 80px;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 18px;
+                                font-weight: 600;
+                                margin: 0 auto;
+                            }
+                            .circle.high {
+                                background-color: #ff4d4d; /* Red for high stress */
+                                color: #fff;
+                            }
+                            .circle.medium {
+                                background-color: #ffcc00; /* Yellow for medium stress */
+                                color: #000;
+                            }
+                            .circle.low {
+                                background-color: #4caf50; /* Green for low stress */
+                                color: #fff;
+                            }
+                            .stress-level.high {
+                                color: #ff4d4d; /* Red for high stress */
+                            }
+                            .stress-level.medium {
+                                color: #ffcc00; /* Yellow for medium stress */
+                            }
+                            .stress-level.low {
+                                color: #4caf50; /* Green for low stress */
+                            }
+                            .footer {
+                                text-align: center;
+                                margin-top: 20px;
+                                font-size: 12px;
+                                color: #777;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="print-container">
+                            <h2>User Stress Result</h2>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Name</th>
+                                        <th>Physical Stress (%)</th>
+                                        <th>Physical Stress Level</th>
+                                        <th>Mental Stress (%)</th>
+                                        <th>Mental Stress Level</th>
+                                        <th>Job Stress (%)</th>
+                                        <th>Job Stress Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${document.querySelector('table tbody').innerHTML}
+                                </tbody>
+                            </table>
+                            <div class="footer">
+                                Provided by MindGenix | Generated by Stress Management System
+                            </div>
+                        </div>
+                    </body>
+                </html>
+            `;
+
+            // Open a new window for printing
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write(printContents);
+            printWindow.document.close();
+            printWindow.print();
+        }
+    </script>
+</body>
+</html>
