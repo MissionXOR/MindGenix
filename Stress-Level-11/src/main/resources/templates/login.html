@@ -149,7 +149,6 @@
         </div>
     </nav>
 
-    <!-- Right Side: Login Form -->
     <div class="split right">
         <div class="login-card">
             <!-- Circular Logo -->
@@ -171,8 +170,16 @@
                     <input type="password" class="form-control" name="password" placeholder="Enter your password" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Login</button>
-                <p th:if="${param.error}" style="color: red;">Invalid email or password</p>
-                <p th:if="${param.logout}" style="color: green;">You have been logged out successfully</p>
+                <!-- Display error message if user is not verified -->
+                  <!-- Display error message -->
+            <p th:if="${param.error}" style="color: red;">
+			    <span th:if="${session.SPRING_SECURITY_LAST_EXCEPTION != null}">
+			        <span th:text="${session.SPRING_SECURITY_LAST_EXCEPTION.message}"></span>
+			    </span>
+			</p>
+			            <p th:if="${logoutMessage != null}" style="color: green;">
+                <span th:text="${logoutMessage}"></span>
+            </p>
             </form>
             <div class="link-to-register">
                 Don't have an account? <a href="/auth/register">Register here</a>

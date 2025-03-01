@@ -56,8 +56,26 @@ public class AuthController {
     public String showPage() {
         return "index";
     }
+   
     @GetMapping("/login")
-    public String showLoginPage() {
+    public String showLoginPage(
+            @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "logout", required = false) String logout,
+            HttpSession session, Model model) {
+
+        if (error != null) {
+            // Retrieve the error message from the session
+            String errorMessage = (String) session.getAttribute("errorMessage");
+            if (errorMessage != null) {
+                model.addAttribute("errorMessage", errorMessage);
+                session.removeAttribute("errorMessage"); // Clear the session attribute
+            }
+        }
+
+        if (logout != null) {
+            model.addAttribute("logoutMessage", "You have been logged out successfully.");
+        }
+
         return "login";
     }
 
@@ -79,7 +97,16 @@ public class AuthController {
             return "register"; // Return to the registration page with error message
         }
     }
-    
+    @GetMapping("/verify")
+    public String verifyUser(@RequestParam("token") String token, Model model) {
+        try {
+            userService.verifyUser(token);
+            model.addAttribute("message", "Email verified successfully. You can now login.");
+        } catch (RuntimeException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+        }
+        return "verify"; // Return to the verification result page
+    }
     @GetMapping("/profile")
     public String userProfile(Model model, Principal principal) {
         User user = userService.findByEmail(principal.getName());

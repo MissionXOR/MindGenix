@@ -21,6 +21,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         if (user == null) {
             throw new UsernameNotFoundException("User not found with email: " + email);
         }
+        if (!user.isEnabled()) {
+            throw new UsernameNotFoundException("Please verify your email first.");
+        }
         return new CustomUserDetails(user);
     }
 }

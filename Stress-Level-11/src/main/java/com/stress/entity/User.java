@@ -16,6 +16,8 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
     private String role;
+    private boolean enabled; // Email verification status
+    private String verificationToken; // Token for email verification
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<StressResult> stressResults;

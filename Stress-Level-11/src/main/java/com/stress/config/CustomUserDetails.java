@@ -48,6 +48,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+    	 return user.isEnabled(); // Check if the user is verified
     }
+    
 }

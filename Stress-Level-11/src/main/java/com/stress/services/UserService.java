@@ -1,6 +1,8 @@
 package com.stress.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +27,9 @@ public class UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+    @Autowired
+    private JavaMailSender mailSender; // Inject JavaMailSender
+
     
     private final String UPLOAD_DIR = "E:/pimage/";
 
@@ -57,9 +62,45 @@ public class UserService {
         } else {
             user.setProfilePicture("default.png"); // Default profile picture
         }
+     // Generate verification token
+        user.setVerificationToken(UUID.randomUUID().toString());
+        user.setEnabled(false); // User is not enabled until email is verified
 
-        // Save the user to the database
-        return userRepository.save(user);
+        // Save the user
+        User savedUser = userRepository.save(user);
+
+        // Send verification email
+        sendVerificationEmail(savedUser);
+
+        return savedUser;
+    }
+    private void sendVerificationEmail(User user) {
+        String verificationLink = "http://localhost:8080/auth/verify?token=" + user.getVerificationToken();
+        String subject = "Email Verification - MindGenix";
+        String message = "Dear " + user.getUsername() + ",\n\n"
+                + "Thank you for registering with MindGenix. Please click the link below to verify your email address:\n\n"
+                + verificationLink + "\n\n"
+                + "If you did not register with us, please ignore this email.\n\n"
+                + "Best regards,\n"
+                + "MindGenix Team";
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(user.getEmail());
+        mailMessage.setSubject(subject);
+        mailMessage.setText(message);
+
+        mailSender.send(mailMessage); // Send the email
+    }
+
+    public void verifyUser(String token) {
+        User user = userRepository.findByVerificationToken(token);
+        if (user != null) {
+            user.setEnabled(true);
+            user.setVerificationToken(null); // Clear the token after verification
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("Invalid verification token.");
+        }
     }
 
     public User updateUserProfile(User user, MultipartFile file) throws IOException {

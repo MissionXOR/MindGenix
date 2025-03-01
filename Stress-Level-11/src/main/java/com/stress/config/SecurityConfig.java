@@ -14,7 +14,10 @@ public class SecurityConfig {
 
     @Autowired
     private CustomSuccessHandler customSuccessHandler;
-
+    @Autowired
+    private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
+    @Autowired
+    private CustomAuthenticationProvider customAuthenticationProvider;
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -38,7 +41,7 @@ public class SecurityConfig {
         http
             .csrf().disable()
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/","/auth/login","/auth/index", "/auth/register", "/login", "/register").permitAll() // Public access
+                .requestMatchers("/","/auth/login","/auth/index", "/auth/register","/auth/verify", "/login", "/register").permitAll() // Public access
                 .requestMatchers("/auth/adminDashboard").hasRole("ADMIN") // Only Admin can access
                 .requestMatchers("/auth/eventCode").hasRole("USER") // Only User can access
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll() 
@@ -50,6 +53,7 @@ public class SecurityConfig {
             	    .usernameParameter("email") // Accept 'email' instead of 'username'
             	    .passwordParameter("password")
             	    .successHandler(customSuccessHandler)
+            	    .failureHandler(customAuthenticationFailureHandler) 
             	    .permitAll()
             	)
 
@@ -58,7 +62,7 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/auth/login?logout=true")
                 .permitAll()
             );
-
+        http.authenticationProvider(customAuthenticationProvider);
         return http.build();
     }
 }
