@@ -18,6 +18,8 @@ public class User {
     private String role;
     private boolean enabled; // Email verification status
     private String verificationToken; // Token for email verification
+    private String resetToken; // Token for password reset
+
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<StressResult> stressResults;

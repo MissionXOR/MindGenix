@@ -10,4 +10,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAll(); // Fetch all users
     Optional<User> findById(Long id); // Find user by ID
     User findByVerificationToken(String verificationToken);
+    User findByResetToken(String resetToken); // Find user by reset token
 }

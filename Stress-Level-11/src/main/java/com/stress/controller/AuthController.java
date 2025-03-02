@@ -107,6 +107,51 @@ public class AuthController {
         }
         return "verify"; // Return to the verification result page
     }
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordForm(Model model) {
+        return "forgot-password";
+    }
+
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam("email") String email, Model model) {
+        try {
+            userService.generateResetToken(email);
+            model.addAttribute("successMessage", "A password reset link has been sent to your email.");
+        } catch (RuntimeException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+        }
+        return "forgot-password";
+    }
+    @GetMapping("/reset-password")
+    public String showResetPasswordForm(@RequestParam("token") String token, Model model) {
+        User user = userService.findByResetToken(token);
+        if (user == null) {
+            model.addAttribute("errorMessage", "Invalid or expired reset token.");
+            return "reset-password";
+        }
+        model.addAttribute("token", token);
+        return "reset-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String processResetPassword(@RequestParam("token") String token,
+                                      @RequestParam("password") String password,
+                                      @RequestParam("confirmPassword") String confirmPassword,
+                                      Model model) {
+        if (!password.equals(confirmPassword)) {
+            model.addAttribute("errorMessage", "Passwords do not match.");
+            return "reset-password";
+        }
+
+        try {
+            userService.resetPassword(token, password);
+            model.addAttribute("successMessage", "Your password has been reset successfully.");
+        } catch (RuntimeException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+        }
+        return "reset-password";
+    }
+    
     @GetMapping("/profile")
     public String userProfile(Model model, Principal principal) {
         User user = userService.findByEmail(principal.getName());

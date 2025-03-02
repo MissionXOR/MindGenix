@@ -102,6 +102,57 @@ public class UserService {
             throw new RuntimeException("Invalid verification token.");
         }
     }
+    
+    public User findByResetToken(String resetToken) {
+        return userRepository.findByResetToken(resetToken);
+    }
+
+    public void resetPassword(String resetToken, String password) {
+        User user = userRepository.findByResetToken(resetToken);
+        if (user == null) {
+            throw new RuntimeException("Invalid or expired reset token.");
+        }
+
+        // Encrypt the new password
+        user.setPassword(passwordEncoder.encode(password));
+        user.setResetToken(null); // Clear the reset token
+        userRepository.save(user);
+    }
+   
+    public void generateResetToken(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            throw new RuntimeException("User not found with email: " + email);
+        }
+
+        // Generate a reset token
+        String resetToken = UUID.randomUUID().toString();
+        user.setResetToken(resetToken);
+        userRepository.save(user);
+
+        // Send reset email
+        sendResetEmail(user.getEmail(), resetToken);
+    }
+
+    private void sendResetEmail(String email, String resetToken) {
+        String resetLink = "http://localhost:8080/auth/reset-password?token=" + resetToken;
+        String subject = "Password Reset - MindGenix";
+        String message = "Dear User,\n\n"
+                + "Please click the link below to reset your password:\n\n"
+                + resetLink + "\n\n"
+                + "If you did not request a password reset, please ignore this email.\n\n"
+                + "Best regards,\n"
+                + "MindGenix Team";
+
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setSubject(subject);
+        mailMessage.setText(message);
+
+        mailSender.send(mailMessage);
+    }
+    
+    
 
     public User updateUserProfile(User user, MultipartFile file) throws IOException {
         System.out.println("Updating user: " + user.getId()); // Debugging

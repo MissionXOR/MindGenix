@@ -41,7 +41,7 @@ public class SecurityConfig {
         http
             .csrf().disable()
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/","/auth/login","/auth/index", "/auth/register","/auth/verify", "/login", "/register").permitAll() // Public access
+                .requestMatchers("/","/auth/login","/auth/index", "/auth/register","/auth/verify","/auth/forgot-password","/auth/reset-password", "/login", "/register").permitAll() // Public access
                 .requestMatchers("/auth/adminDashboard").hasRole("ADMIN") // Only Admin can access
                 .requestMatchers("/auth/eventCode").hasRole("USER") // Only User can access
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll() 
